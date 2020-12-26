@@ -21,6 +21,7 @@ class Situation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String, nullable=False)
     info = db.Column(db.String, nullable=False)
+    case = db.Column(db.string)
     solution = db.Column(db.String)
     law = db.Column(db.String)
     tag = db.relationship("Tag", secondary=tag, back_populates="situation")
@@ -29,6 +30,7 @@ class Situation(db.Model):
     def __init__(self, **kwargs):
         self.path = kwargs.get("path", "")
         self.info = kwargs.get("info", "")
+        self.case = kwargs.get("case", "")
         self.solution = kwargs.get("solution", "")
         self.law = kwargs.get("law", "")
     
@@ -38,6 +40,7 @@ class Situation(db.Model):
                 "id": self.id,
                 "path": self.path,
                 "info": self.info,
+                "case": self.case,
                 "solution": self.solution,
                 "tag": [s.serialize() for s in self.tag],
                 "whitelist": [w.serialize() for w in self.whitelist]
@@ -47,6 +50,7 @@ class Situation(db.Model):
                 "id": self.id,
                 "path": self.path,
                 "info": self.info,
+                "case": self.case,
                 "solution": self.solution,
                 "law": self.law,
                 "tag": [s.serialize() for s in self.tag],
@@ -88,6 +92,7 @@ class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String, nullable=False)
     info = db.Column(db.String, nullable=False)
+    case = db.Column(db.string)
     solution = db.Column(db.String)
     law = db.Column(db.String)
     agree = db.Column(db.String, nullable=False)
@@ -95,6 +100,7 @@ class Request(db.Model):
     def __init__(self, **kwargs):
         self.path = kwargs.get("path", "")
         self.info = kwargs.get("info", "")
+        self.case = kwargs.get("case", "")
         self.solution = kwargs.get("solution", "")
         self.law = kwargs.get("law", "")
         self.agree = kwargs.get("agree", "")
@@ -105,6 +111,7 @@ class Request(db.Model):
               "id": self.id,
               "path": self.path,
               "info": self.info,
+              "case": self.case,
               "solution": self.solution,
               "agree": self.agree
           }
@@ -113,6 +120,7 @@ class Request(db.Model):
               "id": self.id,
               "path": self.path,
               "info": self.info,
+              "case": self.case,
               "solution": self.solution,
               "law": self.law,
               "agree": self.agree
