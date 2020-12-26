@@ -33,25 +33,25 @@ class Situation(db.Model):
         self.law = kwargs.get("law", "")
     
     def serialize(self):
-        if law is null:
-          return{
-              "id": self.id,
-              "path": self.path,
-              "info": self.info,
-              "solution": self.solution,
-              "tag": [s.serialize() for s in self.tag],
-              "whitelist": [w.serialize() for w in self.whitelist]
-          }
+        if self.law is None:
+            return{
+                "id": self.id,
+                "path": self.path,
+                "info": self.info,
+                "solution": self.solution,
+                "tag": [s.serialize() for s in self.tag],
+                "whitelist": [w.serialize() for w in self.whitelist]
+            }
         else:
-          return{
-              "id": self.id,
-              "path": self.path,
-              "info": self.info,
-              "solution": self.solution
-              "law": self.law,
-              "tag": [s.serialize() for s in self.tag],
-              "whitelist": [w.serialize() for w in self.whitelist]
-          }
+            return{
+                "id": self.id,
+                "path": self.path,
+                "info": self.info,
+                "solution": self.solution,
+                "law": self.law,
+                "tag": [s.serialize() for s in self.tag],
+                "whitelist": [w.serialize() for w in self.whitelist]
+            }
   
 class Tag(db.Model):
     __tablename__ = "tag"
@@ -100,7 +100,7 @@ class Request(db.Model):
         self.agree = kwargs.get("agree", "")
 
     def serialize(self):
-        if law is null:
+        if self.law is None:
           return{
               "id": self.id,
               "path": self.path,
@@ -113,7 +113,7 @@ class Request(db.Model):
               "id": self.id,
               "path": self.path,
               "info": self.info,
-              "solution": self.solution
+              "solution": self.solution,
               "law": self.law,
               "agree": self.agree
           }
