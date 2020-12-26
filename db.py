@@ -17,13 +17,13 @@ class Situation(db.Model):
     solution = db.Column(db.String)
     law = db.Column(db.String)
     tag = db.relationship("Tag", secondary=association_table_1, back_populates="situation")
+    whitelist = db.Column(db.String)
 
     def __init__(self, **kwargs):
         self.path = kwargs.get("path", "")
         self.info = kwargs.get("info", "")
         self.solution = kwargs.get("solution", "")
         self.law = kwargs.get("law", "")
-
     
     def serialize(self):
         if law is null:
@@ -32,7 +32,8 @@ class Situation(db.Model):
               "path": self.path,
               "info": self.info,
               "solution": self.solution,
-              "tag": [s.serialize() for s in self.tag]
+              "tag": [s.serialize() for s in self.tag],
+              "whitelist": self.whitelist
           }
         else:
           return{
@@ -41,7 +42,8 @@ class Situation(db.Model):
               "info": self.info,
               "solution": self.solution
               "law": self.law,
-              "tag": [s.serialize() for s in self.tag]
+              "tag": [s.serialize() for s in self.tag],
+              "whitelist": self.whitelist
           }
   
 class Tag(db.Model):
