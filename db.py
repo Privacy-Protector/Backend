@@ -14,7 +14,7 @@ class Situation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String, nullable=False)
     info = db.Column(db.String, nullable=False)
-    solution = db.Column(db.String, nullable=False)
+    solution = db.Column(db.String)
     law = db.Column(db.String)
     tag = db.relationship("Tag", secondary=association_table_1, back_populates="situation")
 
