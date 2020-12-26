@@ -41,10 +41,9 @@ def get_all_stuations_tag():
     tag = body.get("tag")      
     response = []
     for s in Situation.query.all():
-        for t in tags:
-            tag_cur = Tag.query.filter_by(title = t).first()
-            if tag_cur in s.tag:
-                response.append(t.serialize())                        
+        for t in s.tag:
+            if t.title == tag:
+                response.append(s.serialize())                        
     return success_response(response)
 
 
@@ -56,6 +55,19 @@ def get_situation(id):
     if situation is None:
         return failure_response("Situation not found!")  
     return success_response(situation.serialize())
+
+
+@app.route("/api/tag/", methods=['POST'])
+def create_tag():
+    body = json.loads(request.data)
+    title = body.get("title")
+    if title is None:
+        return failure_response("Invalid field!")
+    new_tag = Tag(title = title)
+    db.session.add(new_tag)
+    db.session.commit()
+    return success_response(new_tag.serialize(), 201)
+
 
 @app.route("/api/situations/whitelist/<int:id>", methods=['POST'])
 def add_company_to_whitelist():
@@ -72,8 +84,6 @@ def add_company_to_whitelist():
     db.session.commit()
 
 
-
-
 @app.route("/api/situations/send/", methods=['POST'])
 def send_situation_request():
     
@@ -82,14 +92,9 @@ def send_situation_request():
     info = body.get("info")
     solution = body.get("solution")
     law = body.get("law")
-
-    situation = Situation.query.filter_by(path = path).first()
-    if situtation is None:
-       
    
     if path is None or info is None:
         return failure_response("Invalid field!")
-    
   
     new_request = Request(path = path, info = info, solution = solution, law = law, agree = "false")
     db.session.add(new_request)
@@ -106,28 +111,27 @@ def get_situation_request(id):
 
 
 @app.route("/api/users/receive/", methods=['POST'])
-def receive_request(id):
-    
-    
+def receive_request():
     body = json.loads(request.data)
     request_id = body.get("request_id")
     accepted = body.get("accepted")
-    tag = body.get("tag")
+    tag_id = body.get("tag_id")
 
-    request = Request.query.filter_by(id = request_id).first()
-    if request is None or tag is None:
+    r = Request.query.filter_by(id = request_id).first()
+    t = Tag.query.filter_by(id = tag_id).first()
+    
+    if r is None or t is None:
         return failure_response("Incomplete field!")
     if accepted not in ("true", "false"):
         return failure_response("Invalid field!")
 
-    path = request.path 
-    info = request.info
-    solution = request.solution 
-    law = request.law 
+    path = r.path 
+    info = r.info
+    solution = r.solution 
+    law = r.law 
 
-    
     if accepted == "true":
-        request.accepted = "true"
+        r.accepted = "true"
         the_situation = Situation.query.filter_by(path = path).first()
         if the_situation is not None:
             the_situation.info = info
@@ -135,17 +139,20 @@ def receive_request(id):
               the_situation.solution = solution
             if law is not None:
               the_situation.law = law
+            db.session.commit()
+            return success_response(the_situation.serialize(), 201)
         else:
-            new_situation = Situation(path = path, info = info, solution = solution, law = law, tag = tag)       
-            tag.situation.append(new_situation)        
+            new_situation = Situation(path = path, info = info, solution = solution, law = law)       
+                    
             db.session.add(new_situation)
-        
-    db.session.commit()
-    return success_response(the_request.serialize(), 201)
+            t.situation.append(new_situation)
+            new_situation.tag.append(t)
+            db.session.commit()
+            return success_response(new_situation.serialize(), 201)
 
 
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": 
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
