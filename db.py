@@ -2,11 +2,18 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-association_table_1 = db.Table(
+tag = db.Table(
     "situation_tag",
     db.Model.metadata,
     db.Column("situation_id", db.Integer, db.ForeignKey("situation.id")),
     db.Column("tag_id", db.Integer, db.ForeignKey("tag.id"))
+)
+
+whitelist = db.Table(
+    "situation_whitelist",
+    db.Model.metadata,
+    db.Column("situation_id", db.Integer, db.ForeignKey("situation.id")),
+    db.Column("whitelist_id", db.Integer, db.ForeignKey("whitelist.id"))
 )
 
 class Situation(db.Model):
@@ -16,8 +23,8 @@ class Situation(db.Model):
     info = db.Column(db.String, nullable=False)
     solution = db.Column(db.String)
     law = db.Column(db.String)
-    tag = db.relationship("Tag", secondary=association_table_1, back_populates="situation")
-    whitelist = db.Column(db.String)
+    tag = db.relationship("Tag", secondary=tag, back_populates="situation")
+    whitelist = db.relationship("Whitelist", secondary=whitelist, back_populates="situation")
 
     def __init__(self, **kwargs):
         self.path = kwargs.get("path", "")
@@ -33,7 +40,7 @@ class Situation(db.Model):
               "info": self.info,
               "solution": self.solution,
               "tag": [s.serialize() for s in self.tag],
-              "whitelist": self.whitelist
+              "whitelist": [w.serialize() for w in self.whitelist]
           }
         else:
           return{
@@ -43,14 +50,14 @@ class Situation(db.Model):
               "solution": self.solution
               "law": self.law,
               "tag": [s.serialize() for s in self.tag],
-              "whitelist": self.whitelist
+              "whitelist": [w.serialize() for w in self.whitelist]
           }
   
 class Tag(db.Model):
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
-    situation = db.relationship("Situation", secondary=association_table_1, back_populates="tag")
+    situation = db.relationship("Situation", secondary=tag, back_populates="tag")
     
     def __init__(self, **kwargs):
         self.title = kwargs.get("title", "")
@@ -59,6 +66,21 @@ class Tag(db.Model):
         return{
             "id": self.id,
             "title": self.title,
+        }
+
+class Whitelist(db.Model):
+    __tablename__ = "whitelist"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String, nullable=False)
+    situation = db.relationship("Situation", secondary=whitelist, back_populates="whitelist")
+    
+    def __init__(self, **kwargs):
+        self.name = kwargs.get("name", "")
+    
+    def serialize(self):
+        return{
+            "id": self.id,
+            "name": self.name,
         }
 
 class Request(db.Model):
