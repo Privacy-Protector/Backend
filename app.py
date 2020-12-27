@@ -1,5 +1,5 @@
 from db import db
-from db import Situation, Tag, Request
+from db import Situation, Tag, Request, Whitelist
 from flask import Flask, request
 import json
 import os
@@ -29,16 +29,14 @@ def hello_world():
 
 # ----------- USER ROUTES -------------------------------------------------------------------
 
-@app.route("/api/events/")
+@app.route("/api/situations/")
 def get_all_situations():
     return success_response([s.serialize() for s in Situation.query.all()])
 
 
-
-@app.route("/api/situations/tag/")
-def get_all_stuations_tag():
-    body = json.loads(request.data)
-    tag = body.get("tag")      
+@app.route("/api/situations/tag/<tag>/")
+def get_all_stuations_tag(tag):
+    
     response = []
     for s in Situation.query.all():
         for t in s.tag:
@@ -50,7 +48,7 @@ def get_all_stuations_tag():
 
 @app.route("/api/situation/<int:id>/")
 def get_situation(id): 
-    body = json.loads(request.data)
+    
     situation = Situation.query.filter_by(id = id).first()          
     if situation is None:
         return failure_response("Situation not found!")  
@@ -69,19 +67,25 @@ def create_tag():
     return success_response(new_tag.serialize(), 201)
 
 
-@app.route("/api/situations/whitelist/<int:id>", methods=['POST'])
-def add_company_to_whitelist():
+@app.route("/api/situations/whitelist/<int:id>/", methods=['POST'])
+def add_company_to_whitelist(id):
     
     body = json.loads(request.data)   
-    company = body.get("company")
+    name = body.get("name")
     situation = Situation.query.filter_by(id = id).first() 
     if situation is None:
         return failure_response("Situation not found!")
+    for x in situation.whitelist:
+        if x.name == name:
+            return failure_response("Company already in!")
 
     wL = Whitelist(name = name) 
     db.session.add(wL)
     situation.whitelist.append(wL)
+    wL.situation.append(situation)
     db.session.commit()
+
+    return success_response(wL.serialize(), 201)
 
 
 @app.route("/api/situations/send/", methods=['POST'])
@@ -90,13 +94,15 @@ def send_situation_request():
     body = json.loads(request.data)   
     path = body.get("path")
     info = body.get("info")
+    case = body.get("case")
     solution = body.get("solution")
     law = body.get("law")
+
    
     if path is None or info is None:
         return failure_response("Invalid field!")
   
-    new_request = Request(path = path, info = info, solution = solution, law = law, agree = "false")
+    new_request = Request(path = path, info = info, case = case, solution = solution, law = law, agree = "false")
     db.session.add(new_request)
     db.session.commit()
     return success_response(new_request.serialize(), 201)
@@ -127,14 +133,17 @@ def receive_request():
 
     path = r.path 
     info = r.info
+    case = r.case
     solution = r.solution 
     law = r.law 
 
     if accepted == "true":
-        r.accepted = "true"
+        r.agree = "true"
         the_situation = Situation.query.filter_by(path = path).first()
         if the_situation is not None:
             the_situation.info = info
+            if case is not None:
+              the_situation.case = case
             if solution is not None:
               the_situation.solution = solution
             if law is not None:
@@ -142,7 +151,7 @@ def receive_request():
             db.session.commit()
             return success_response(the_situation.serialize(), 201)
         else:
-            new_situation = Situation(path = path, info = info, solution = solution, law = law)       
+            new_situation = Situation(path = path, info = info, case = case, solution = solution, law = law)       
                     
             db.session.add(new_situation)
             t.situation.append(new_situation)
@@ -153,6 +162,7 @@ def receive_request():
 
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
+    app.config['JSON_AS_ASCII'] = False
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
