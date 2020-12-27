@@ -2,14 +2,14 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-tag = db.Table(
+situation_tag = db.Table(
     "situation_tag",
     db.Model.metadata,
     db.Column("situation_id", db.Integer, db.ForeignKey("situation.id")),
     db.Column("tag_id", db.Integer, db.ForeignKey("tag.id"))
 )
 
-whitelist = db.Table(
+situation_whitelist = db.Table(
     "situation_whitelist",
     db.Model.metadata,
     db.Column("situation_id", db.Integer, db.ForeignKey("situation.id")),
@@ -21,11 +21,12 @@ class Situation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String, nullable=False)
     info = db.Column(db.String, nullable=False)
-    case = db.Column(db.string)
+    case = db.Column(db.String)
     solution = db.Column(db.String)
     law = db.Column(db.String)
-    tag = db.relationship("Tag", secondary=tag, back_populates="situation")
-    whitelist = db.relationship("Whitelist", secondary=whitelist, back_populates="situation")
+    
+    tag = db.relationship("Tag", secondary=situation_tag, back_populates="situation")
+    whitelist = db.relationship("Whitelist", secondary=situation_whitelist, back_populates="situation")
 
     def __init__(self, **kwargs):
         self.path = kwargs.get("path", "")
@@ -61,7 +62,7 @@ class Tag(db.Model):
     __tablename__ = "tag"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
-    situation = db.relationship("Situation", secondary=tag, back_populates="tag")
+    situation = db.relationship("Situation", secondary=situation_tag, back_populates="tag")
     
     def __init__(self, **kwargs):
         self.title = kwargs.get("title", "")
@@ -76,7 +77,7 @@ class Whitelist(db.Model):
     __tablename__ = "whitelist"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
-    situation = db.relationship("Situation", secondary=whitelist, back_populates="whitelist")
+    situation = db.relationship("Situation", secondary=situation_whitelist, back_populates="whitelist")
     
     def __init__(self, **kwargs):
         self.name = kwargs.get("name", "")
@@ -92,7 +93,7 @@ class Request(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     path = db.Column(db.String, nullable=False)
     info = db.Column(db.String, nullable=False)
-    case = db.Column(db.string)
+    case = db.Column(db.String)
     solution = db.Column(db.String)
     law = db.Column(db.String)
     agree = db.Column(db.String, nullable=False)
