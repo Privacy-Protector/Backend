@@ -1,4 +1,4 @@
-# Backend
+# Mynona
 The Database has Situation, Tag, Whitelist, Request, these 4 classes. And there are 2 association tables connecting Situation-Tag, Situation-Whitelist.
 Route information: https://privacy-protector-v2.herokuapp.com/
 
